@@ -9,11 +9,14 @@ namespace Files.App.Utils.Storage
 {
 	public static class FileThumbnailHelper
 	{
+		private static readonly SemaphoreSlim iconLookupSlots = new(4, 4);
+
 		/// <summary>
 		/// Returns icon or thumbnail for given file or folder
 		/// </summary>
-		public static async Task<byte[]?> GetIconAsync(string? path, uint requestedSize, bool isFolder, IconOptions iconOptions)
+		public static async Task<byte[]?> GetIconAsync(string? path, uint requestedSize, bool isFolder, IconOptions iconOptions, CancellationToken cancellationToken = default)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			var size = iconOptions.HasFlag(IconOptions.UseCurrentScale) ? requestedSize * App.AppModel.AppWindowDPI : requestedSize;
 			// Ensure size is at least 1 to prevent layout errors
 			size = Math.Max(1, size);
@@ -42,7 +45,16 @@ namespace Files.App.Utils.Storage
 				? MtpHelpers.ResolveMtpShellPath(path) ?? path
 				: path;
 
-			return await STATask.Run(() => Win32Helper.GetIcon(resolvedPath, (int)size, isFolder, iconOptions), App.Logger);
+			await iconLookupSlots.WaitAsync(cancellationToken);
+			try
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				return await STATask.Run(() => Win32Helper.GetIcon(resolvedPath, (int)size, isFolder, iconOptions), App.Logger);
+			}
+			finally
+			{
+				iconLookupSlots.Release();
+			}
 		}
 
 		/// <summary>
@@ -51,8 +63,19 @@ namespace Files.App.Utils.Storage
 		/// <param name="path"></param>
 		/// <param name="isFolder"></param>
 		/// <returns></returns>
-		public static async Task<byte[]?> GetIconOverlayAsync(string? path, bool isFolder)
-			=> await STATask.Run(() => Win32Helper.GetIconOverlay(path, isFolder), App.Logger);
+		public static async Task<byte[]?> GetIconOverlayAsync(string? path, bool isFolder, CancellationToken cancellationToken = default)
+		{
+			await iconLookupSlots.WaitAsync(cancellationToken);
+			try
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				return await STATask.Run(() => Win32Helper.GetIconOverlay(path, isFolder), App.Logger);
+			}
+			finally
+			{
+				iconLookupSlots.Release();
+			}
+		}
 
 		[Obsolete]
 		public static async Task<byte[]?> LoadIconFromPathAsync(string filePath, uint thumbnailSize, ThumbnailMode thumbnailMode, ThumbnailOptions thumbnailOptions, bool isFolder = false)

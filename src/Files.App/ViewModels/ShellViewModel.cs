@@ -1350,7 +1350,8 @@ namespace Files.App.ViewModels
 							item.ItemPath,
 							thumbnailSize,
 							item.IsFolder,
-							IconOptions.ReturnThumbnailOnly | IconOptions.ReturnOnlyIfCached | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None));
+							IconOptions.ReturnThumbnailOnly | IconOptions.ReturnOnlyIfCached | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None),
+							cancellationToken);
 
 					cancellationToken.ThrowIfCancellationRequested();
 					loadNonCachedThumbnail = true;
@@ -1363,7 +1364,8 @@ namespace Files.App.ViewModels
 							item.ItemPath,
 							thumbnailSize,
 							item.IsFolder,
-							IconOptions.ReturnIconOnly | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None));
+							IconOptions.ReturnIconOnly | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None),
+							cancellationToken);
 
 					cancellationToken.ThrowIfCancellationRequested();
 				}
@@ -1375,7 +1377,8 @@ namespace Files.App.ViewModels
 						item.ItemPath,
 						thumbnailSize,
 						item.IsFolder,
-						(returnIconOnly ? IconOptions.ReturnIconOnly : IconOptions.None) | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None));
+						(returnIconOnly ? IconOptions.ReturnIconOnly : IconOptions.None) | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None),
+						cancellationToken);
 
 				cancellationToken.ThrowIfCancellationRequested();
 			}
@@ -1394,7 +1397,7 @@ namespace Files.App.ViewModels
 			}
 
 			// Get icon overlay
-			var iconOverlay = await FileThumbnailHelper.GetIconOverlayAsync(item.ItemPath, true);
+			var iconOverlay = await FileThumbnailHelper.GetIconOverlayAsync(item.ItemPath, true, cancellationToken);
 
 			cancellationToken.ThrowIfCancellationRequested();
 
@@ -1421,7 +1424,8 @@ namespace Files.App.ViewModels
 								item.ItemPath,
 								thumbnailSize,
 								item.IsFolder,
-								IconOptions.ReturnThumbnailOnly | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None));
+								IconOptions.ReturnThumbnailOnly | (useCurrentScale ? IconOptions.UseCurrentScale : IconOptions.None),
+								cancellationToken);
 					}
 					finally
 					{
@@ -1890,6 +1894,7 @@ namespace Files.App.ViewModels
 
 		private async Task RapidAddItemsToCollectionAsync(string? path, string? previousDir, Action? postLoadCallback)
 		{
+			var navigationStopwatch = Stopwatch.StartNew();
 			IsSearchResults = false;
 			HasNoWatcher = false;
 			IsLocationUnavailable = false;
@@ -1951,6 +1956,7 @@ namespace Files.App.ViewModels
 			}
 			finally
 			{
+				App.Logger.LogInformation("Folder load finished: {ItemCount} items in {ElapsedMilliseconds} ms", filesAndFolders.Count, navigationStopwatch.ElapsedMilliseconds);
 				// Make sure item count is updated
 				DirectoryInfoUpdated?.Invoke(this, EventArgs.Empty);
 				enumFolderSemaphore.Release();

@@ -16,7 +16,7 @@
     <Identity
         Name="VantaExplorer"
         Publisher="CN=VantaExplorer"
-        Version="4.2.9.1" />
+        Version="4.2.9.2" />
 
     <Properties>
         <DisplayName>Vanta Explorer</DisplayName>
