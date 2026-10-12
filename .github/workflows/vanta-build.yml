@@ -19,9 +19,9 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      - name: Restore solution
+      - name: Restore app projects
         shell: pwsh
-        run: msbuild Files.slnx -t:Restore -p:Configuration=Release -p:Platform=x64 -v:quiet
+        run: msbuild src/Files.App/Files.App.csproj -t:Restore -p:Configuration=Release -p:Platform=x64 -p:RestoreDisableParallel=true -v:minimal
       - name: Build native launcher
         shell: pwsh
         run: |
