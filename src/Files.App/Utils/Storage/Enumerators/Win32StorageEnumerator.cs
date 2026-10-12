@@ -16,8 +16,6 @@ namespace Files.App.Utils.Storage
 
 		private static readonly string folderTypeTextLocalized = Strings.Folder.GetLocalizedResource();
 
-		private static readonly IIconCacheService iconCacheService = Ioc.Default.GetRequiredService<IIconCacheService>();
-
 		public static async Task<List<ListedItem>> ListEntries(
 			string path,
 			IntPtr hFile,
@@ -60,7 +58,8 @@ namespace Files.App.Utils.Storage
 						if (file is not null)
 						{
 							var filePath = file.ItemPath!;
-							file.PreloadedIconData = await iconCacheService.GetIconAsync(file.ItemPath, file.FileExtension, false);
+							// Visible items load their icons through the layout's deferred property callback.
+							// Resolving an icon for every entry here delays the first folder render.
 							tempList.Add(file);
 							++count;
 
@@ -78,7 +77,6 @@ namespace Files.App.Utils.Storage
 							if (folder is not null)
 							{
 								var folderPath = folder.ItemPath!;
-								folder.PreloadedIconData = await iconCacheService.GetIconAsync(folder.ItemPath, null, true);
 								tempList.Add(folder);
 								++count;
 

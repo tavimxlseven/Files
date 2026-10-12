@@ -8,8 +8,8 @@ param(
     [string]$Destination = ""
 )
 
-$CertFriendlyName = "FilesApp_SelfSigned"
-$CertPublisher = "CN=Files"
+$CertFriendlyName = "VantaExplorer_SelfSigned"
+$CertPublisher = "CN=VantaExplorer"
 $CertStoreLocation = "Cert:\CurrentUser\My"
 
 # Generate self signed cert
