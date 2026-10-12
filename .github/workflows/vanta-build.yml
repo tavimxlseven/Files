@@ -21,7 +21,11 @@ jobs:
           global-json-file: global.json
       - name: Restore app projects
         shell: pwsh
-        run: msbuild src/Files.App/Files.App.csproj -t:Restore -p:Configuration=Release -p:Platform=x64 -p:RestoreDisableParallel=true -v:minimal
+        run: |
+          msbuild src/Files.App/Files.App.csproj -t:Restore -p:Configuration=Release -p:Platform=x64 -p:RestoreDisableParallel=true -v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          msbuild src/Files.App.Server/Files.App.Server.csproj -t:Restore -p:Configuration=Release -p:Platform=x64 -p:RestoreDisableParallel=true -v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build native launcher
         shell: pwsh
         run: |
