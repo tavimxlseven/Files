@@ -36,6 +36,7 @@ namespace Files.App.ViewModels
 		private readonly SemaphoreSlim getFileOrFolderSemaphore;
 		private readonly SemaphoreSlim bulkOperationSemaphore;
 		private readonly SemaphoreSlim loadThumbnailSemaphore;
+		private readonly SemaphoreSlim extendedPropertiesSemaphore = new(4, 4);
 		private readonly ConcurrentDictionary<string, CancellationTokenSource> thumbnailRetryDebounce;
 		private readonly ConcurrentQueue<(uint Action, string FileName)> operationQueue;
 		private readonly ConcurrentQueue<uint> gitChangesQueue;
@@ -1507,9 +1508,12 @@ namespace Files.App.ViewModels
 			itemLoadQueue[item.GetRequiredPath()] = false;
 
 			var cts = loadPropsCTS;
+			var slotAcquired = false;
 
 			try
 			{
+				await extendedPropertiesSemaphore.WaitAsync(cts.Token);
+				slotAcquired = true;
 				cts.Token.ThrowIfCancellationRequested();
 				if (itemLoadQueue.TryGetValue(item.GetRequiredPath(), out var canceled) && canceled)
 					return;
@@ -1727,6 +1731,8 @@ namespace Files.App.ViewModels
 			}
 			finally
 			{
+				if (slotAcquired)
+					extendedPropertiesSemaphore.Release();
 				itemLoadQueue.TryRemove(item.GetRequiredPath(), out _);
 				await RefreshTagGroups();
 			}
