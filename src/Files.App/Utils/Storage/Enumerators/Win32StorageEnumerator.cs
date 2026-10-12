@@ -15,6 +15,7 @@ namespace Files.App.Utils.Storage
 		private static readonly IStorageCacheService fileListCache = Ioc.Default.GetRequiredService<IStorageCacheService>();
 
 		private static readonly string folderTypeTextLocalized = Strings.Folder.GetLocalizedResource();
+		private static readonly string fileTypeTextLocalized = Strings.File.GetLocalizedResource();
 
 		public static async Task<List<ListedItem>> ListEntries(
 			string path,
@@ -127,7 +128,7 @@ namespace Files.App.Utils.Storage
 
 		public static ListedItem GetAlternateStream((string Name, long Size) ads, ListedItem main)
 		{
-			string itemType = Strings.File.GetLocalizedResource();
+			string itemType = fileTypeTextLocalized;
 			string? itemFileExtension = null;
 
 			if (ads.Name.Contains('.'))
@@ -265,7 +266,7 @@ namespace Files.App.Utils.Storage
 
 			long itemSizeBytes = findData.GetSize();
 			var itemSize = itemSizeBytes.ToSizeString();
-			string itemType = Strings.File.GetLocalizedResource();
+			string itemType = fileTypeTextLocalized;
 			string? itemFileExtension = null;
 
 			if (findData.cFileName.Contains('.'))
